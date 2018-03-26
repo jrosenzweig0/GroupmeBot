@@ -1,28 +1,27 @@
+let fs = require('fs');
 let express = require("express");
 let app = express();
-const PORT = 8081;
-const BOT_ID1 = "e2bff582c397bf95d9fc8ed810"; //makerstudio
-const BOT_ID2 = "e0f983259f4ca37701d3800068"; //trumpbot
-const BOTTESTID = "26382044";
-const MAKERSTUDIOID = "32617115";
 app.use(express.static('public'));
 let request = require("request");
 let bodyparser = require("body-parser");
 let http = require("http");
-var fs = require('fs');
+var secrets = JSON.parse(fs.readFileSync("secrets.json"));
+var markov = JSON.parse(fs.readFileSync("public/markov.json"));
+var corpus = JSON.parse(fs.readFileSync("public/corpus.json"));
+var messageLength = JSON.parse(fs.readFileSync("public/messageLength.json"));
+const PORT = 8081;
+const BOT_ID1 = secrets["makerstudio"];
+const BOT_ID2 = secrets["botTest"];
+const BOTTESTID = secrets["botTestGroupID"];
+const MAKERSTUDIOID = secrets[ "makerstudioGroupID"];
+
+
 
 function randomInteger(x){
 	return Math.floor(Math.random()*x);
 }
 
-var contents = fs.readFileSync("public/markov.json");
-var markov = JSON.parse(contents);
 
-var con = fs.readFileSync("public/corpus.json");
-var corpus = JSON.parse(con);
-
-var cons = fs.readFileSync("public/messageLength.json");
-var messageLength = JSON.parse(cons);
 
 
 app.use(bodyparser.urlencoded({extended: true}));
