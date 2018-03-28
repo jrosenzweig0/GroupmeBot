@@ -1,10 +1,10 @@
-let fs = require('fs');
-let express = require("express");
-let app = express();
+var fs = require('fs');
+var express = require("express");
+var app = express();
 app.use(express.static('public'));
-let request = require("request");
-let bodyparser = require("body-parser");
-let http = require("http");
+var request = require("request");
+var bodyparser = require("body-parser");
+var http = require("http");
 var secrets = JSON.parse(fs.readFileSync("secrets.json"));
 var markov = JSON.parse(fs.readFileSync("public/markov.json"));
 var corpus = JSON.parse(fs.readFileSync("public/corpus.json"));
@@ -14,6 +14,7 @@ const BOT_ID1 = secrets["makerstudio"];
 const BOT_ID2 = secrets["botTest"];
 const BOTTESTID = secrets["botTestGroupID"];
 const MAKERSTUDIOID = secrets[ "makerstudioGroupID"];
+console.log(secrets["makerstudio"]);
 
 var tokens = 1;
 var start = Date.now();
@@ -91,6 +92,8 @@ function makeMessage(){
 
 app.post("/post", (req, res) => {
 	timeStuff();
+	fs.writeFile("public/data.txt", "Tokens: " + tokens + "\nStart: " + start + "\nOffset: " + offset + "\nTime: " + time, function(err) {if(err) {return console.log(err);}});
+
 	if(req.body.sender_type !== "bot" && req.body.group_id == MAKERSTUDIOID) {
 
 		words = String(req.body.text).match(/[\w':\-]+/g);
@@ -130,7 +133,6 @@ app.post("/post", (req, res) => {
 		fs.writeFile("public/markov.json", JSON.stringify(markov), function(err) {if(err) {return console.log(err);}});
 		fs.writeFile("public/corpus.json", JSON.stringify(corpus), function(err) {if(err) {return console.log(err);}});		
 		fs.writeFile("public/messageLength.json", JSON.stringify(messageLength), function(err) {if(err) {return console.log(err);}});
-		fs.writeFile("public/data.txt", "Tokens: " + tokens + "\nStart: " + start + "\nOffset: " + offset + "\nTime: " + time, function(err) {if(err) {return console.log(err);}});
 
 		request.post(
 		{
@@ -148,7 +150,8 @@ app.post("/post", (req, res) => {
 		});
 	}
 
-	if(req.body.group_id == BOTTESTID && req.body.text=="send"){
+	if(req.body.group_id == BOTTESTID && req.body.text=="send" && tokens > 0){
+		tokens -= 1;
 		request.post(
 		{
 			url: "https://api.groupme.com/v3/bots/post",
