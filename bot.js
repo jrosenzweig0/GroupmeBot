@@ -15,6 +15,11 @@ const BOT_ID2 = secrets["botTest"];
 const BOTTESTID = secrets["botTestGroupID"];
 const MAKERSTUDIOID = secrets[ "makerstudioGroupID"];
 
+var tokens = 1;
+var start = Date.now();
+var offset = 0;
+var time;
+
 
 
 function randomInteger(x){
@@ -36,6 +41,13 @@ let server = http.createServer(app).listen(PORT, function() {
 
 });
 
+function timeStuff(){
+	time = Date.now() - start - offset;
+	if (time > 86400000){
+		offset += 86400000;
+		tokens += 1;
+	}
+}
 
 function makeMessage(){
 	cumulativeProbability = 0;
@@ -78,7 +90,7 @@ function makeMessage(){
 
 
 app.post("/post", (req, res) => {
-
+	timeStuff();
 	if(req.body.sender_type !== "bot" && req.body.group_id == MAKERSTUDIOID) {
 
 		words = String(req.body.text).match(/[\w':\-]+/g);
@@ -118,6 +130,7 @@ app.post("/post", (req, res) => {
 		fs.writeFile("public/markov.json", JSON.stringify(markov), function(err) {if(err) {return console.log(err);}});
 		fs.writeFile("public/corpus.json", JSON.stringify(corpus), function(err) {if(err) {return console.log(err);}});		
 		fs.writeFile("public/messageLength.json", JSON.stringify(messageLength), function(err) {if(err) {return console.log(err);}});
+		fs.writeFile("public/data.txt", "Tokens: " + tokens + "\nStart: " + start + "\nOffset: " + offset + "\nTime: " + time, function(err) {if(err) {return console.log(err);}});
 
 		request.post(
 		{
