@@ -23,6 +23,7 @@ var time;
 var timeLeft;
 var hoursLeft;
 var minutesLeft;
+var previousMessages = [];
 
 
 function randomInteger(x){
@@ -47,7 +48,8 @@ let server = http.createServer(app).listen(PORT, function() {
 function timeStuff(){
 	time = Date.now() - start - offset;
 	timeLeft = 86400000 - time;
-	minutesLeft = Math.floor((time%3600000)/60000);
+
+	minutesLeft = 60 - Math.floor((time%3600000)/60000);
 	hoursLeft = Math.floor(timeLeft/3600000);
 	if (time > 86400000){
 		offset += 86400000;
@@ -88,16 +90,23 @@ function makeMessage(){
 		
 		}
 		else{
+			previousMessages.unshift(string);
 			return string;	
 		}
 	}
+	previousMessages.unshift(string);
 	return string;
 }
 
 
 app.post("/post", (req, res) => {
 	timeStuff();
-	fs.writeFile("public/data.txt", "Tokens: " + tokens + "\nStart: " + start + "\nOffset: " + offset + "\nTime: " + time, function(err) {if(err) {return console.log(err);}});
+
+	if(previousMessages.length>10){
+		previousMessages.pop();
+	}
+
+	fs.writeFile("public/data.txt", "Tokens: " + tokens + "\nStart: " + start + "\nOffset: " + offset + "\nTime: " + time + "\n" + previousMessages, function(err) {if(err) {return console.log(err);}});
 
 	if(req.body.sender_type !== "bot" && req.body.group_id == MAKERSTUDIOID) {
 
@@ -160,7 +169,7 @@ app.post("/post", (req, res) => {
 			url: "https://api.groupme.com/v3/bots/post",
 			form: {
 				"bot_id": BOT_ID2,
-				"text": "There are no more tokens. \nThe next token will appear in " + hoursLeft + " hours and " + minutesLeft + " minutes."
+				"text": "There are no more tokens. \nThe next token will appear in " + hoursLeft + " hour/s and " + minutesLeft + " minute/s."
 			}
 		},
 		(err, httpResponse, body) => {
@@ -170,7 +179,7 @@ app.post("/post", (req, res) => {
 			}
 		});
 	}
-	
+
 	if(req.body.group_id == BOTTESTID && req.body.text=="send" && tokens > 0){
 		tokens -= 1;
 		request.post(
@@ -188,6 +197,24 @@ app.post("/post", (req, res) => {
 			}
 		});
 	}
+	else if(req.body.group_id == BOTTESTID && req.body.text.substring(0,4) =="send" && tokens > 0){
+		messageNumber = req.body.text.substring(5,6);
+		tokens -= 1;
+		request.post(
+		{
+			url: "https://api.groupme.com/v3/bots/post",
+			form: {
+				"bot_id": BOT_ID1,
+				"text": previousMessages[messageNumber]
+			}
+		},
+		(err, httpResponse, body) => {
+			if(err != null) {
+				console.log("Error");
+				console.log(err);
+			}
+		});
+	}
 
 	if(req.body.group_id == BOTTESTID && req.body.text=="tokens"){
 		request.post(
@@ -195,7 +222,7 @@ app.post("/post", (req, res) => {
 			url: "https://api.groupme.com/v3/bots/post",
 			form: {
 				"bot_id": BOT_ID2,
-				"text": "There are " + tokens + " tokens left. \nThe next token will appear in " + hoursLeft + " hours and " + minutesLeft + " minutes."
+				"text": "There is/are " + tokens + " token/s left. \nThe next token will appear in " + hoursLeft + " hour/s and " + minutesLeft + " minute/s."
 			}
 		},
 		(err, httpResponse, body) => {
