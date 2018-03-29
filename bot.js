@@ -197,7 +197,7 @@ app.post("/post", (req, res) => {
 			}
 		});
 	}
-	else if(req.body.group_id == BOTTESTID && req.body.text.substring(0,4) =="send" && tokens > 0){
+	else if(req.body.group_id == BOTTESTID && req.body.text.substring(0,4) =="send" && tokens > 0 && previousMessages[req.body.text.substring(5,6)] !== undefined){
 		messageNumber = req.body.text.substring(5,6);
 		tokens -= 1;
 		request.post(
