@@ -20,7 +20,9 @@ var tokens = 1;
 var start = Date.now();
 var offset = 0;
 var time;
-
+var timeLeft;
+var hoursLeft;
+var minutesLeft;
 
 
 function randomInteger(x){
@@ -44,6 +46,9 @@ let server = http.createServer(app).listen(PORT, function() {
 
 function timeStuff(){
 	time = Date.now() - start - offset;
+	timeLeft = 86400000 - time;
+	minutesLeft = Math.floor((time%3600000)/60000);
+	hoursLeft = Math.floor(timeLeft/3600000);
 	if (time > 86400000){
 		offset += 86400000;
 		tokens += 1;
@@ -149,7 +154,23 @@ app.post("/post", (req, res) => {
 			}
 		});
 	}
-
+	if(req.body.group_id == BOTTESTID && req.body.text=="send" && tokens == 0){
+		request.post(
+		{
+			url: "https://api.groupme.com/v3/bots/post",
+			form: {
+				"bot_id": BOT_ID2,
+				"text": "There are no more tokens. \nThe next token will appear in " + hoursLeft + " hours and " + minutesLeft + " minutes."
+			}
+		},
+		(err, httpResponse, body) => {
+			if(err != null) {
+				console.log("Error");
+				console.log(err);
+			}
+		});
+	}
+	
 	if(req.body.group_id == BOTTESTID && req.body.text=="send" && tokens > 0){
 		tokens -= 1;
 		request.post(
@@ -158,6 +179,23 @@ app.post("/post", (req, res) => {
 			form: {
 				"bot_id": BOT_ID1,
 				"text": string
+			}
+		},
+		(err, httpResponse, body) => {
+			if(err != null) {
+				console.log("Error");
+				console.log(err);
+			}
+		});
+	}
+
+	if(req.body.group_id == BOTTESTID && req.body.text=="tokens"){
+		request.post(
+		{
+			url: "https://api.groupme.com/v3/bots/post",
+			form: {
+				"bot_id": BOT_ID2,
+				"text": "There are " + tokens + " tokens left. \nThe next token will appear in " + hoursLeft + " hours and " + minutesLeft + " minutes."
 			}
 		},
 		(err, httpResponse, body) => {
